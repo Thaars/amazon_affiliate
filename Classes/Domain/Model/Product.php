@@ -295,8 +295,16 @@ class Product
             $amazonProductValue = '';
         }
 
-        if ($charset != "utf-8") {
-            $amazonProductValue = iconv("utf-8", $charset, $amazonProductValue);
+        // FIX: zend_mm_heap corrupted in PHP >= 7
+        // the charset is already utf8 and the encoding to utf8 fails with the error above
+        if (strtoupper($charset) != "UTF-8") {
+            $amazonProductValue = iconv("UTF-8", $charset . '//IGNORE', $amazonProductValue);
+            // this is just an other way to fix it, but detecting of the encoding of a string is like a guess
+//            $encoding = mb_detect_encoding($amazonProductValue);
+//            if ($encoding != 'UTF-8')
+//            {
+//                $amazonProductValue = mb_convert_encoding($amazonProductValue, $encoding, 'UTF-8');
+//            }
         }
 
         return $amazonProductValue;
@@ -422,7 +430,10 @@ class Product
      */
     public function setAmazonProduct($amazonProduct)
     {
-        if (!is_null($amazonProduct)) {
+        // FIX: check if the value is not empty instead of is not null
+        // $amazonProduct can be false, if the SOAP request fails
+        // this fix makes teh debugging easier
+        if (!empty($amazonProduct)) {
             if ($amazonProduct['ItemAttributes']['ListPrice']['FormattedPrice'] == '') {
                 $amazonProduct['ItemAttributes']['ListPrice']['FormattedPrice'] = $amazonProduct['Offers']['Offer']['OfferListing']['Price']['FormattedPrice'];
             }
