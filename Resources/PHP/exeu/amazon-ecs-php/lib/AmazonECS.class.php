@@ -228,9 +228,11 @@ class AmazonECS
       sleep(1);
     }
 
+    // FIX: caching of the wsdl to the disk (default behavior)
+    // can cause an error if the php version get switched
     $soapClient = new SoapClient(
       $this->webserviceWsdl,
-      array('exceptions' => 1)
+      array('exceptions' => 1, 'cache_wsdl' => WSDL_CACHE_MEMORY)
     );
 
     $soapClient->__setLocation(str_replace(
